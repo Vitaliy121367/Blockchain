@@ -12,6 +12,7 @@ namespace Blockchain
             {
                 Console.WriteLine($"Index: {block.Index}");
                 Console.WriteLine($"Hash: {block.Hash}");
+                Console.WriteLine($"Author: {block.Author}");
                 Console.WriteLine($"Data: {block.Data}");
                 Console.WriteLine($"Previous Hash: {block.PreviousHash}");
                 Console.WriteLine($"Timestamp: {block.TimeStamp}");
@@ -22,6 +23,7 @@ namespace Blockchain
         {
             Console.WriteLine($"Index: {block.Index}");
             Console.WriteLine($"Hash: {block.Hash}");
+            Console.WriteLine($"Author: {block.Author}");
             Console.WriteLine($"Data: {block.Data}");
             Console.WriteLine($"Previous Hash: {block.PreviousHash}");
             Console.WriteLine($"Timestamp: {block.TimeStamp}");

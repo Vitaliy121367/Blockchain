@@ -21,6 +21,7 @@ namespace Blockchain
             {
                 Index = 0,
                 Data = "GenesisBlock",
+                Author = "Genesis",
                 PreviousHash = "0",
                 TimeStamp = DateTime.Parse("2023-06-01")
             };
@@ -28,12 +29,13 @@ namespace Blockchain
             Chain.Add(genesisBlock);
         }
 
-        public void AddBlock(string data)
+        public void AddBlock(string author, string data)
         {
             var lastBlock = Chain[Chain.Count - 1];
             var newBlock = new Block
             {
                 Index = lastBlock.Index + 1,
+                Author = author,
                 Data = data,
                 PreviousHash = lastBlock.Hash,
                 TimeStamp = DateTime.Now
