@@ -59,5 +59,20 @@ namespace Blockchain
             }
             return true;
         }
+
+        public Block? SearchBlockByIndex(int index)
+        {
+            return Chain.Find(b => b.Index == index);
+        }
+
+        public List<Block>? SearchBlocksByData(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return new List<Block>();
+            }
+            List<Block> blocks = Chain.FindAll(b => b.Data.Contains(text));
+            return blocks;
+        }
     }
 }

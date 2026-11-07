@@ -18,5 +18,14 @@ namespace Blockchain
                 Console.WriteLine(new string('-', 50));
             }
         }
+        public void DisplyBlock(Block block)
+        {
+            Console.WriteLine($"Index: {block.Index}");
+            Console.WriteLine($"Hash: {block.Hash}");
+            Console.WriteLine($"Data: {block.Data}");
+            Console.WriteLine($"Previous Hash: {block.PreviousHash}");
+            Console.WriteLine($"Timestamp: {block.TimeStamp}");
+            Console.WriteLine(new string('-', 50));
+        }
     }
 }
