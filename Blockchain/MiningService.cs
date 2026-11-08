@@ -34,5 +34,58 @@ namespace Blockchain
             }
             return block.Nonce;
         }
+
+        public Task<int> AsyncMineBlock(Block block, int difficulty)
+        {
+            return Task.Run(() =>
+            {
+                string target = new string('0', difficulty);
+
+                int foundNonce = -1;
+                string foundHash = null;
+
+                object lockObject = new object();
+
+                Parallel.For(0, int.MaxValue, (nonce, state) =>
+                {
+                    var candidate = new Block
+                    {
+                        Index = block.Index,
+                        PreviousHash = block.PreviousHash,
+                        TimeStamp = block.TimeStamp,
+                        Author = block.Author,
+                        Data = block.Data,
+                        Nonce = nonce
+                    };
+
+                    string hash = _hashingService.ComputeBlockHash(candidate);
+
+                    if (hash.StartsWith(target))
+                    {
+                        lock (lockObject)
+                        {
+                            if (foundNonce == -1)
+                            {
+                                foundNonce = nonce;
+                                foundHash = hash;
+                            }
+                        }
+
+                        state.Stop();
+                    }
+                });
+
+                if (foundNonce == -1)
+                    throw new Exception("Mining failed");
+
+                block.Nonce = foundNonce;
+                block.Hash = foundHash;
+
+                Console.WriteLine(
+                    $"Found Block {block.Index}: Nonce: {block.Nonce}, Hash: {block.Hash}");
+
+                return foundNonce;
+            });
+        }
     }
 }

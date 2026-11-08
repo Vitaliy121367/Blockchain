@@ -2,16 +2,21 @@
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            var blockChainService = new BlockChain(3);
+            var blockChainService = await BlockChain.CreateAsync(5);
             var displayService = new DisplayService();
+            DateTime timeStart = DateTime.Now;
 
-            blockChainService.AddBlock("Alex register", "Alex");
-            blockChainService.AddBlock("Alex buy 100", "Alex");
-            blockChainService.AddBlock("Bob register", "Bob");
-            blockChainService.AddBlock("Alex send Bob 30", "Alex");
-            blockChainService.AddBlock("Bob buy 50", "Bob");
+            await blockChainService.AddBlock("Alex register", "Alex");
+            await blockChainService.AddBlock("Alex buy 100", "Alex");
+            await blockChainService.AddBlock("Bob register", "Bob");
+            await blockChainService.AddBlock("Alex send Bob 30", "Alex");
+            await blockChainService.AddBlock("Bob buy 50", "Bob");
+
+            DateTime timeEnd = DateTime.Now;
+
+            Console.WriteLine($"Time: {timeEnd - timeStart}");
 
             displayService.DisplayChain(blockChainService);
 
@@ -35,7 +40,7 @@
                 Console.WriteLine("Blockchain is not valid");
             }
             Console.WriteLine(new string('*', 50));
-            blockChainService.RepairChain(0);
+            await blockChainService.RepairChain(0);
             displayService.DisplayChain(blockChainService); 
             if (blockChainService.IsChainValid())
             {

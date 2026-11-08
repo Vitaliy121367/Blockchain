@@ -10,16 +10,24 @@ namespace Blockchain
         private readonly HashingService _hashingService;
         private readonly MiningService _miningService;
         public int Difficulty { get; private set; } = 4; // Number of leading zeros required in the hash
-        public BlockChain(int difficulty)
+        private BlockChain(int difficulty)
         {
             Chain = new List<Block>();
             _hashingService = new HashingService();
             _miningService = new MiningService();
             Difficulty = difficulty;
-            AddGenesisBlock();
         }
 
-        private void AddGenesisBlock()
+        public static async Task<BlockChain> CreateAsync(int difficulty)
+        {
+            var blockchain = new BlockChain(difficulty);
+
+            await blockchain.AddGenesisBlock();
+
+            return blockchain;
+        }
+
+        private async Task AddGenesisBlock()
         {
             var genesisBlock = new Block
             {
@@ -29,11 +37,13 @@ namespace Blockchain
                 PreviousHash = "0",
                 TimeStamp = DateTime.UtcNow
             };
-            _miningService.MineBlock(genesisBlock,1);
+
+            await _miningService.AsyncMineBlock(genesisBlock, 1);
+
             Chain.Add(genesisBlock);
         }
 
-        public void AddBlock(string data, string author)
+        public async Task AddBlock(string data, string author)
         {
             var lastBlock = Chain[Chain.Count - 1];
             var newBlock = new Block
@@ -44,7 +54,7 @@ namespace Blockchain
                 PreviousHash = lastBlock.Hash,
                 TimeStamp = DateTime.UtcNow
             };
-            _miningService.MineBlock(newBlock, Difficulty);
+            await _miningService.AsyncMineBlock(newBlock, Difficulty);
             Chain.Add(newBlock);
         }
 
@@ -89,27 +99,30 @@ namespace Blockchain
             return blocks;
         }
 
-        public void RepairChain(int startIndex)
+        public async Task RepairChain(int startIndex)
         {
-            if(startIndex >= 0 && startIndex < Chain.Count)
+            if (startIndex < 0 || startIndex >= Chain.Count)
+                return;
+
+            DateTime timeStart = DateTime.Now;
+
+            for (int i = startIndex; i < Chain.Count; i++)
             {
-                int sumTry = 0;
-                DateTime timeStart = DateTime.Now;
-                for (int i = startIndex; i < Chain.Count; i++)
+                var currentBlock = Chain[i];
+
+                if (i > 0)
                 {
-                    var currentBlock = Chain[i];
-                    if (i > 0)
-                    {
-                        currentBlock.PreviousHash = Chain[i - 1].Hash;
-                    }
-                    sumTry += _miningService.MineBlock(currentBlock, Difficulty);
+                    currentBlock.PreviousHash = Chain[i - 1].Hash;
                 }
-                DateTime timeEnd = DateTime.Now;
-                Console.WriteLine($"Chain repaired: {Chain.Count - startIndex}");
-                Console.WriteLine($"Sum Try: {sumTry}");
-                Console.WriteLine($"Time: {timeEnd - timeStart}");
-                Console.WriteLine(new string('-', 50));
+
+                await _miningService.AsyncMineBlock(currentBlock, Difficulty);
             }
+
+            DateTime timeEnd = DateTime.Now;
+
+            Console.WriteLine($"Chain repaired: {Chain.Count - startIndex}");
+            Console.WriteLine($"Time: {timeEnd - timeStart}");
+            Console.WriteLine(new string('-', 50));
         }
     }
 }
