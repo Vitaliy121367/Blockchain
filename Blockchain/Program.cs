@@ -35,7 +35,7 @@
                 Console.WriteLine("Blockchain is not valid");
             }
             Console.WriteLine(new string('*', 50));
-            blockChainService.RepairChain(2);
+            blockChainService.RepairChain(0);
             displayService.DisplayChain(blockChainService); 
             if (blockChainService.IsChainValid())
             {

@@ -11,7 +11,7 @@ namespace Blockchain
         {
             _hashingService = new HashingService();
         }
-        public void MineBlock(Block block, int difficulty)
+        public int MineBlock(Block block, int difficulty)
         {
             string target = new string('0', difficulty);
 
@@ -32,6 +32,7 @@ namespace Blockchain
 
                 block.Nonce++;
             }
+            return block.Nonce;
         }
     }
 }

@@ -91,14 +91,24 @@ namespace Blockchain
 
         public void RepairChain(int startIndex)
         {
-            for (int i = startIndex; i < Chain.Count; i++)
+            if(startIndex >= 0 && startIndex < Chain.Count)
             {
-                var currentBlock = Chain[i];
-                if (i > 0)
+                int sumTry = 0;
+                DateTime timeStart = DateTime.Now;
+                for (int i = startIndex; i < Chain.Count; i++)
                 {
-                    currentBlock.PreviousHash = Chain[i - 1].Hash;
+                    var currentBlock = Chain[i];
+                    if (i > 0)
+                    {
+                        currentBlock.PreviousHash = Chain[i - 1].Hash;
+                    }
+                    sumTry += _miningService.MineBlock(currentBlock, Difficulty);
                 }
-                _miningService.MineBlock(currentBlock, Difficulty);
+                DateTime timeEnd = DateTime.Now;
+                Console.WriteLine($"Chain repaired: {Chain.Count - startIndex}");
+                Console.WriteLine($"Sum Try: {sumTry}");
+                Console.WriteLine($"Time: {timeEnd - timeStart}");
+                Console.WriteLine(new string('-', 50));
             }
         }
     }
