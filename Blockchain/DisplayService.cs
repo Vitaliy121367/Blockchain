@@ -16,6 +16,7 @@ namespace Blockchain
                 Console.WriteLine($"Data: {block.Data}");
                 Console.WriteLine($"Previous Hash: {block.PreviousHash}");
                 Console.WriteLine($"Timestamp: {block.TimeStamp}");
+                Console.WriteLine($"Nonce: {block.Nonce}");
                 Console.WriteLine(new string('-', 50));
             }
         }
