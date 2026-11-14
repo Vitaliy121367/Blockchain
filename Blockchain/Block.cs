@@ -12,6 +12,8 @@ namespace Blockchain
         public string Data { get; set; }
         public string PreviousHash { get; set; }
         public DateTime TimeStamp { get; set; }
-        public int Nonce { get; set; }
+        public long Nonce { get; set; }
+        public decimal MiningDuration { get; set; }
+        public int DifficultyAtMining { get; set; }
     }
 }

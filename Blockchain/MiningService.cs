@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Blockchain
@@ -11,9 +12,10 @@ namespace Blockchain
         {
             _hashingService = new HashingService();
         }
-        public int MineBlock(Block block, int difficulty)
+        public long MineBlock(Block block, int difficulty)
         {
             string target = new string('0', difficulty);
+            var startTime = Stopwatch.StartNew();
 
             while (true)
             {
@@ -21,10 +23,11 @@ namespace Blockchain
 
                 if (block.Hash.Substring(0, difficulty) == target)
                 {
+                    startTime.Stop();
+                    block.MiningDuration = (decimal)startTime.Elapsed.TotalSeconds;
                     Console.WriteLine($"Found Block {block.Index}: Nonce: {block.Nonce}, Hash: {block.Hash}");
                     break;
                 }
-
                 if (block.Nonce % 100000 == 0)
                 {
                     Console.WriteLine($"Mining Block {block.Index}: Nonce: {block.Nonce}, Hash: {block.Hash}");
@@ -35,19 +38,24 @@ namespace Blockchain
             return block.Nonce;
         }
 
-        public Task<int> AsyncMineBlock(Block block, int difficulty)
+
+        public Task<long> AsyncMineBlock(Block block, int difficulty)
         {
             return Task.Run(() =>
             {
                 string target = new string('0', difficulty);
+                var startTime = Stopwatch.StartNew();
 
-                int foundNonce = -1;
+                long foundNonce = -1;
                 string foundHash = null;
 
                 object lockObject = new object();
 
                 Parallel.For(0, int.MaxValue, (nonce, state) =>
                 {
+                    if (state.IsStopped)
+                        return;
+
                     var candidate = new Block
                     {
                         Index = block.Index,
@@ -55,12 +63,13 @@ namespace Blockchain
                         TimeStamp = block.TimeStamp,
                         Author = block.Author,
                         Data = block.Data,
-                        Nonce = nonce
+                        Nonce = nonce,
+                        DifficultyAtMining = block.DifficultyAtMining
                     };
 
                     string hash = _hashingService.ComputeBlockHash(candidate);
 
-                    if (hash.StartsWith(target))
+                    if (hash.StartsWith(target, StringComparison.Ordinal))
                     {
                         lock (lockObject)
                         {
@@ -78,14 +87,24 @@ namespace Blockchain
                 if (foundNonce == -1)
                     throw new Exception("Mining failed");
 
+                startTime.Stop();
+
+                block.MiningDuration =
+                    (decimal)startTime.Elapsed.TotalSeconds;
+
                 block.Nonce = foundNonce;
                 block.Hash = foundHash;
 
-                Console.WriteLine(
-                    $"Found Block {block.Index}: Nonce: {block.Nonce}, Hash: {block.Hash}");
+                if (block.Nonce % 100000 == 0)
+                {
+                    Console.WriteLine($"Mining Block {block.Index}: Nonce: {block.Nonce}, Hash: {block.Hash}");
+                }
+
+                Console.WriteLine($"Found Block {block.Index}: Nonce: {block.Nonce}, Hash: {block.Hash}");
 
                 return foundNonce;
             });
         }
+
     }
 }

@@ -9,7 +9,7 @@ namespace Blockchain
     {
         public string ComputeBlockHash(Block block)
         {
-            var dataToHash = $"{block.Index}{block.PreviousHash}{block.TimeStamp}{block.Author}{block.Data}{block.Nonce}"; 
+            var dataToHash = $"{block.Index}{block.PreviousHash}{block.TimeStamp}{block.Author}{block.Data}{block.Nonce}{block.DifficultyAtMining}"; 
             return ComputeHash(dataToHash);
         }
         private string ComputeHash(string data)

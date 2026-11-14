@@ -1,54 +1,72 @@
-﻿namespace Blockchain
+﻿using System.Diagnostics;
+
+namespace Blockchain
 {
-    internal class Program
+    public class Program
     {
         static async Task Main(string[] args)
         {
-            var blockChainService = await BlockChain.CreateAsync(5);
+            var blockChainService = await BlockChain.CreateAsync();
             var displayService = new DisplayService();
-            DateTime timeStart = DateTime.Now;
 
-            await blockChainService.AddBlock("Alex register", "Alex");
-            await blockChainService.AddBlock("Alex buy 100", "Alex");
-            await blockChainService.AddBlock("Bob register", "Bob");
-            await blockChainService.AddBlock("Alex send Bob 30", "Alex");
-            await blockChainService.AddBlock("Bob buy 50", "Bob");
+            while (true)
+            {
+                Console.WriteLine("1. Add Block");
+                Console.WriteLine("2. Display Chain");
+                Console.WriteLine("3. Validate Chain");
+                Console.WriteLine("4. Add 8 Blocks");
+                Console.WriteLine("5. Print Difficulty History");
+                Console.WriteLine("6. Hack data");
+                Console.WriteLine("7. Find First Invalid Block");
+                Console.WriteLine("8. Hack Hash");
 
-            DateTime timeEnd = DateTime.Now;
+                var enter = Console.ReadLine();
+                Console.Clear();
+                var startTime = Stopwatch.StartNew();
 
-            Console.WriteLine($"Time: {timeEnd - timeStart}");
+                switch (enter)
+                {
+                    case "1":
+                        await blockChainService.AddBlock("Bob Send Alex 100", "Bob");
+                        break;
 
-            displayService.DisplayChain(blockChainService);
+                    case "2":
+                        displayService.DisplayChain(blockChainService);
+                        break;
 
-            if (blockChainService.IsChainValid())
-            {
-                Console.WriteLine("Blockchain is valid");
-            }
-            else
-            {
-                Console.WriteLine("Blockchain is not valid");
-            }
-            Console.WriteLine(new string('*', 50));
-            blockChainService.Chain[2].Data = "Hacked Data";
+                    case "3":
+                        Console.WriteLine(blockChainService.IsChainValid());
+                        break;
 
-            if (blockChainService.IsChainValid())
-            {
-                Console.WriteLine("Blockchain is valid");
-            }
-            else
-            {
-                Console.WriteLine("Blockchain is not valid");
-            }
-            Console.WriteLine(new string('*', 50));
-            await blockChainService.RepairChain(0);
-            displayService.DisplayChain(blockChainService); 
-            if (blockChainService.IsChainValid())
-            {
-                Console.WriteLine("Blockchain is valid");
-            }
-            else
-            {
-                Console.WriteLine("Blockchain is not valid");
+                    case "4":
+                        for (int i = 0; i < 8; i++)
+                        {
+                            await blockChainService.AddBlock($"Block {i + 1}", $"Autor {i + 1}");
+                        }
+                        break;
+
+                    case "5":
+                        blockChainService.PrintDifficultyHistory();
+                        break;
+
+                    case "6":
+                        blockChainService.Chain[2].Data = "Hack data";
+                        break;
+
+                    case "7":
+                        Console.WriteLine(blockChainService.FindFirstInvalidBlock());
+                        break;
+
+                    case "8":
+                        blockChainService.Chain[3].Hash = "Hack Hash";
+                        break;
+
+                    default:
+                        Console.WriteLine("Invalid option!");
+                        break;
+                }
+                startTime.Stop();
+                Console.WriteLine($"Time Async: {(decimal)startTime.Elapsed.TotalSeconds}");
             }
         }
     }

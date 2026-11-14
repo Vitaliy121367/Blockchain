@@ -6,21 +6,22 @@ namespace Blockchain
 {
     public class BlockChain
     {
+        private int _difficulty = 1;
+        public readonly decimal _targetBlockTime = 10; // Target block time in seconds
+        public readonly int _adjustEveryNBlocks = 3; // Number of blocks after which difficulty is adjusted
         public List<Block> Chain { get; set; }
         private readonly HashingService _hashingService;
         private readonly MiningService _miningService;
-        public int Difficulty { get; private set; } = 4; // Number of leading zeros required in the hash
-        private BlockChain(int difficulty)
+        private BlockChain()
         {
             Chain = new List<Block>();
             _hashingService = new HashingService();
             _miningService = new MiningService();
-            Difficulty = difficulty;
         }
 
-        public static async Task<BlockChain> CreateAsync(int difficulty)
+        public static async Task<BlockChain> CreateAsync()
         {
-            var blockchain = new BlockChain(difficulty);
+            var blockchain = new BlockChain();
 
             await blockchain.AddGenesisBlock();
 
@@ -35,11 +36,11 @@ namespace Blockchain
                 Data = "GenesisBlock",
                 Author = "Genesis",
                 PreviousHash = "0",
-                TimeStamp = DateTime.UtcNow
+                TimeStamp = DateTime.UtcNow,
+                DifficultyAtMining = _difficulty
             };
 
             await _miningService.AsyncMineBlock(genesisBlock, 1);
-
             Chain.Add(genesisBlock);
         }
 
@@ -52,10 +53,31 @@ namespace Blockchain
                 Data = data,
                 Author = author,
                 PreviousHash = lastBlock.Hash,
-                TimeStamp = DateTime.UtcNow
+                TimeStamp = DateTime.UtcNow,
+                DifficultyAtMining = _difficulty
             };
-            await _miningService.AsyncMineBlock(newBlock, Difficulty);
+            await _miningService.AsyncMineBlock(newBlock, _difficulty);
             Chain.Add(newBlock);
+            AdjustDifficulty();
+        }
+        private void AdjustDifficulty()
+        {
+            var rexentBlock = Chain.Where(b => b.Index > 0).TakeLast(_adjustEveryNBlocks).ToList();
+            if (rexentBlock.Count < _adjustEveryNBlocks)
+            {
+                return; // Not enough blocks to adjust difficulty
+            }
+            var avgTime = rexentBlock.Average(b => (b.MiningDuration));
+            if (avgTime < _targetBlockTime)
+            {
+                _difficulty++;
+                Console.WriteLine($"Difficulty increased to {_difficulty}");
+            }
+            else if (avgTime > _targetBlockTime)
+            {
+                _difficulty = Math.Max(1, _difficulty - 1);
+                Console.WriteLine($"Difficulty decreased to {_difficulty}");
+            }
         }
 
         public bool IsChainValid()
@@ -76,7 +98,7 @@ namespace Blockchain
                 {
                     return false;
                 }
-                if(!currentBlock.Hash.StartsWith(new string('0', Difficulty)))
+                if(!currentBlock.Hash.StartsWith(new string('0', currentBlock.DifficultyAtMining)))
                 {
                     return false;
                 }
@@ -115,7 +137,7 @@ namespace Blockchain
                     currentBlock.PreviousHash = Chain[i - 1].Hash;
                 }
 
-                await _miningService.AsyncMineBlock(currentBlock, Difficulty);
+                await _miningService.AsyncMineBlock(currentBlock, _difficulty);
             }
 
             DateTime timeEnd = DateTime.Now;
@@ -123,6 +145,40 @@ namespace Blockchain
             Console.WriteLine($"Chain repaired: {Chain.Count - startIndex}");
             Console.WriteLine($"Time: {timeEnd - timeStart}");
             Console.WriteLine(new string('-', 50));
+        }
+
+        public void PrintDifficultyHistory()
+        {
+            foreach (var block in Chain)
+            {
+                Console.WriteLine($"Index: {block.Index}, Difficulty: {block.DifficultyAtMining}, Nonce: {block.Nonce}, MiningDuration: {block.MiningDuration}");
+            }
+        }
+
+        public string FindFirstInvalidBlock()
+        {
+            for (int i = 1; i < Chain.Count; i++)
+            {
+                var currentBlock = Chain[i];
+                var previousBlock = Chain[i - 1];
+                if (currentBlock.Index == 0)
+                {
+                    continue; // Skip genesis block
+                }
+                if (!currentBlock.Hash.StartsWith(new string('0', currentBlock.DifficultyAtMining)))
+                {
+                    return $"Block {currentBlock.Index} Proof of Work Error";
+                }
+                if (currentBlock.PreviousHash != previousBlock.Hash)
+                {
+                    return $"Block {currentBlock.Index} PreviousHash Error";
+                }
+                if (currentBlock.Hash != _hashingService.ComputeBlockHash(currentBlock))
+                {
+                    return $"Block {currentBlock.Index} Hash Error";
+                }
+            }
+            return "Chain is valid";
         }
     }
 }
