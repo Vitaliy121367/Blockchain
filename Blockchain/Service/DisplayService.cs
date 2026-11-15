@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Blockchain.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Blockchain
+namespace Blockchain.Service
 {
     public class DisplayService
     {
@@ -13,9 +14,14 @@ namespace Blockchain
                 Console.WriteLine($"Index: {block.Index}");
                 Console.WriteLine($"Hash: {block.Hash}");
                 Console.WriteLine($"Author: {block.Author}");
-                Console.WriteLine($"Data: {block.Data}");
+                Console.WriteLine($"Transaction:");
+                foreach (var item in block.Transaction)
+                {
+                    Console.WriteLine("\t"+item);
+                }
                 Console.WriteLine($"Previous Hash: {block.PreviousHash}");
                 Console.WriteLine($"Timestamp: {block.TimeStamp}");
+                Console.WriteLine($"DifficultyAtMining: {block.DifficultyAtMining}");
                 Console.WriteLine($"Nonce: {block.Nonce}");
                 Console.WriteLine(new string('-', 50));
             }
@@ -25,7 +31,11 @@ namespace Blockchain
             Console.WriteLine($"Index: {block.Index}");
             Console.WriteLine($"Hash: {block.Hash}");
             Console.WriteLine($"Author: {block.Author}");
-            Console.WriteLine($"Data: {block.Data}");
+            Console.WriteLine($"Transaction:");
+            foreach (var item in block.Transaction)
+            {
+                Console.WriteLine("\t" + item);
+            }
             Console.WriteLine($"Previous Hash: {block.PreviousHash}");
             Console.WriteLine($"Timestamp: {block.TimeStamp}");
             Console.WriteLine($"DifficultyAtMining: {block.DifficultyAtMining}");

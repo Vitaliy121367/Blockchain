@@ -1,15 +1,17 @@
-﻿using System;
+﻿using Blockchain.Models;
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Blockchain
+namespace Blockchain.Service
 {
     public class HashingService
     {
         public string ComputeBlockHash(Block block)
         {
-            var dataToHash = $"{block.Index}{block.PreviousHash}{block.TimeStamp}{block.Author}{block.Data}{block.Nonce}{block.DifficultyAtMining}"; 
+            var stringTransactionRaw = string.Concat(block.Transaction.Select(t => t.ToRawString()));
+            var dataToHash = $"{block.Index}{block.PreviousHash}{block.TimeStamp}{block.Author}{stringTransactionRaw}{block.Nonce}{block.DifficultyAtMining}"; 
             return ComputeHash(dataToHash);
         }
         private string ComputeHash(string data)

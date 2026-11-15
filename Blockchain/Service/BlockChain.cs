@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Blockchain.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Blockchain
+namespace Blockchain.Service
 {
     public class BlockChain
     {
@@ -12,6 +14,7 @@ namespace Blockchain
         public List<Block> Chain { get; set; }
         private readonly HashingService _hashingService;
         private readonly MiningService _miningService;
+        private readonly TransactionService _transactionService = new TransactionService();
         private BlockChain()
         {
             Chain = new List<Block>();
@@ -33,24 +36,63 @@ namespace Blockchain
             var genesisBlock = new Block
             {
                 Index = 0,
-                Data = "GenesisBlock",
+                Transaction = new List<Transaction>(),
                 Author = "Genesis",
                 PreviousHash = "0",
                 TimeStamp = DateTime.UtcNow,
-                DifficultyAtMining = _difficulty
             };
 
             await _miningService.AsyncMineBlock(genesisBlock, 1);
             Chain.Add(genesisBlock);
         }
 
-        public async Task AddBlock(string data, string author)
+        public async Task AddBlock(List<Transaction> transactions, string author)
         {
+            bool error = false;
+            foreach (var tx in transactions)
+            {
+                var isValid = _transactionService.ValidTransaction(tx);
+                if (!isValid.isValid)
+                {
+                    Console.WriteLine($"Error Message: {isValid.errorMessage}");
+                    error = true;
+                }
+            }
+
+            var duplicateIds = transactions.Where(tx => tx != null).GroupBy(tx => tx.Id).Where(g => g.Count() > 1).Select(g => g.Key);
+
+            foreach (var id in duplicateIds)
+            {
+                Console.WriteLine($"Transaction ID {id} is duplicated in the new block.");
+                error = true;
+            }
+
+            foreach (var tx in transactions)
+            {
+                if (tx == null)
+                    continue;
+
+                bool alreadyExists = Chain.SelectMany(b => b.Transaction).Any(t => t.Id == tx.Id);
+
+                if (alreadyExists)
+                {
+                    Console.WriteLine($"Transaction ID {tx.Id} already exists in Blockchain.");
+                    error = true;
+                }
+            }
+
+            if (error)
+            {
+                return;
+            }
+
+            var transactionCopy = new List<Transaction>(transactions);
+
             var lastBlock = Chain[Chain.Count - 1];
             var newBlock = new Block
             {
                 Index = lastBlock.Index + 1,
-                Data = data,
+                Transaction = transactionCopy,
                 Author = author,
                 PreviousHash = lastBlock.Hash,
                 TimeStamp = DateTime.UtcNow,
@@ -111,15 +153,15 @@ namespace Blockchain
             return Chain.Find(b => b.Index == index);
         }
 
-        public List<Block>? SearchBlocksByData(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return new List<Block>();
-            }
-            List<Block> blocks = Chain.FindAll(b => b.Data.Contains(text));
-            return blocks;
-        }
+        //public List<Block>? SearchBlocksByData(string text)
+        //{
+        //    if (string.IsNullOrEmpty(text))
+        //    {
+        //        return new List<Block>();
+        //    }
+        //    List<Block> blocks = Chain.FindAll(b => b.Data.Contains(text));
+        //    return blocks;
+        //}
 
         public async Task RepairChain(int startIndex)
         {
@@ -179,6 +221,43 @@ namespace Blockchain
                 }
             }
             return "Chain is valid";
+        }
+
+        public void FindTransactionById(string id)
+        {
+            var block = Chain.FirstOrDefault(b => b.Transaction.Any(t => t.Id == id));
+            if (block == null)
+            {
+                Console.WriteLine($"Transaction not found");
+                return;
+            }
+            var transaction = block.Transaction.FirstOrDefault(t => t.Id == id);
+            if (block != null && transaction != null)
+            {
+                Console.WriteLine($"Block Id: {block.Index}");
+                Console.WriteLine(transaction);
+                return;
+            }
+        }
+        public List<Transaction>? FindTransactionByUser(string user, string filter="all")
+        {
+            if (filter=="all")
+            {
+                List<Transaction> transactions = Chain.SelectMany(b => b.Transaction).Where(t => t.From == user || t.To == user).ToList();
+                return transactions;
+            }
+            else if (filter == "from")
+            {
+                List<Transaction> transactions = Chain.SelectMany(b => b.Transaction).Where(t => t.From == user).ToList();
+                return transactions;
+            }
+            else if (filter == "to")
+            {
+
+                List<Transaction> transactions = Chain.SelectMany(b => b.Transaction).Where(t => t.To == user).ToList();
+                return transactions;
+            }
+            return null;
         }
     }
 }

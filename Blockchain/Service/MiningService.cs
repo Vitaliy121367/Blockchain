@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Blockchain.Models;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace Blockchain
+namespace Blockchain.Service
 {
     public class MiningService
     {
@@ -62,7 +63,7 @@ namespace Blockchain
                         PreviousHash = block.PreviousHash,
                         TimeStamp = block.TimeStamp,
                         Author = block.Author,
-                        Data = block.Data,
+                        Transaction = block.Transaction,
                         Nonce = nonce,
                         DifficultyAtMining = block.DifficultyAtMining
                     };
