@@ -14,11 +14,11 @@ namespace Blockchain
                 Console.WriteLine("1. Add Block");
                 Console.WriteLine("2. Display Chain");
                 Console.WriteLine("3. Validate Chain");
-                Console.WriteLine("4. Add 8 Blocks");
-                Console.WriteLine("5. Print Difficulty History");
-                Console.WriteLine("6. Hack data");
-                Console.WriteLine("7. Find First Invalid Block");
-                Console.WriteLine("8. Hack Hash");
+                Console.WriteLine("4. Add 5 Blocks");
+                Console.WriteLine("5. Search block by Id");
+                Console.WriteLine("6. Search block by Data");
+                Console.WriteLine("7. Hack Data");
+
 
                 var enter = Console.ReadLine();
                 Console.Clear();
@@ -35,30 +35,55 @@ namespace Blockchain
                         break;
 
                     case "3":
-                        Console.WriteLine(blockChainService.IsChainValid());
-                        break;
-
-                    case "4":
-                        for (int i = 0; i < 8; i++)
-                        {
-                            await blockChainService.AddBlock($"Block {i + 1}", $"Autor {i + 1}");
-                        }
-                        break;
-
-                    case "5":
-                        blockChainService.PrintDifficultyHistory();
-                        break;
-
-                    case "6":
-                        blockChainService.Chain[2].Data = "Hack data";
-                        break;
-
-                    case "7":
                         Console.WriteLine(blockChainService.FindFirstInvalidBlock());
                         break;
 
-                    case "8":
-                        blockChainService.Chain[3].Hash = "Hack Hash";
+                    case "4":
+                        await blockChainService.AddBlock("Реєстрація нового користувача Alex", "Alex");
+
+                        await blockChainService.AddBlock("Bob придбав товар на суму 500 грн", "Bob");
+
+                        await blockChainService.AddBlock("Bob переказав Alex 100 грн", "Bob");
+
+                        await blockChainService.AddBlock("Alex здійснив покупку товару на суму 1200 грн", "Alex");
+
+                        await blockChainService.AddBlock("Користувач Bob змінив адресу електронної пошти", "Bob");
+                        break;
+
+                    case "5":
+                        Console.WriteLine("Enter Id: ");
+                        int id = Int32.Parse(Console.ReadLine());
+                        var blockById = blockChainService.SearchBlockByIndex(id);
+                        if (blockById != null)
+                        {
+                            displayService.DisplyBlock(blockById);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Block not found");
+                        }                        
+                        break;
+
+                    case "6":
+                        Console.WriteLine("Enter data: ");
+                        string data = Console.ReadLine();
+                        var blockByData = blockChainService.SearchBlocksByData(data);
+                        if (blockByData != null)
+                        {
+                            foreach (var item in blockByData)
+                            {
+                                displayService.DisplyBlock(item);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Block not found");
+                        }
+                        
+                        break;
+
+                    case "7":
+                        blockChainService.Chain[2].Data = "Hack Data";
                         break;
 
                     default:

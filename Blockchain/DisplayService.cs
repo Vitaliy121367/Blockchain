@@ -28,6 +28,8 @@ namespace Blockchain
             Console.WriteLine($"Data: {block.Data}");
             Console.WriteLine($"Previous Hash: {block.PreviousHash}");
             Console.WriteLine($"Timestamp: {block.TimeStamp}");
+            Console.WriteLine($"DifficultyAtMining: {block.DifficultyAtMining}");
+            Console.WriteLine($"MiningDuration: {block.MiningDuration}");
             Console.WriteLine(new string('-', 50));
         }
     }
