@@ -25,6 +25,7 @@ namespace Blockchain
                 Console.WriteLine("8. Find Transaction by Id");
                 Console.WriteLine("9. Find Transaction by User");
                 Console.WriteLine("10. Test AddBlock");
+                Console.WriteLine("11. Test AuditBlockchain");
                 Console.WriteLine("0. Exit");
 
                 var enter = Console.ReadLine();
@@ -188,6 +189,41 @@ namespace Blockchain
                             Console.WriteLine($"Result: {(blockChainService.Chain.Count == before ? "PASSED" : "FAILED")}");
 
                             Console.WriteLine("\n========== TESTING FINISHED ==========");
+
+                            break;
+                        }
+
+                    case "11":
+                        {
+                            Console.WriteLine("========== TEST: BLOCKCHAIN INTEGRITY ==========");
+                            Console.WriteLine("Test: Change transaction Amount in existing block");
+
+                            int blockIndex = blockChainService.Chain.Count - 1;
+
+                            if (blockIndex < 1 || blockChainService.Chain[blockIndex].Transaction.Count == 0)
+                            {
+                                Console.WriteLine("FAILED: No block with transactions found.");
+                                break;
+                            }
+
+                            var transaction = blockChainService.Chain[blockIndex].Transaction[0];
+
+                            decimal oldAmount = transaction.Amount;
+
+                            transaction.Amount += 100;
+
+                            Console.WriteLine($"Block: {blockChainService.Chain[blockIndex].Index}");
+                            Console.WriteLine($"Transaction ID: {transaction.Id}");
+                            Console.WriteLine($"Old Amount: {oldAmount}");
+                            Console.WriteLine($"New Amount: {transaction.Amount}");
+
+                            Console.WriteLine("\n========== AUDIT RESULT ==========");
+
+                            bool auditResult = blockChainService.AuditBlockchain();
+
+                            Console.WriteLine(
+                                $"Test Result: {(!auditResult ? "PASSED" : "FAILED")}"
+                            );
 
                             break;
                         }

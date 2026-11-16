@@ -259,5 +259,94 @@ namespace Blockchain.Service
             }
             return null;
         }
+
+
+        public bool AuditBlockchain()
+        {
+            int BlockCount = Chain.Count;
+            int TransactionCount = 0;
+            decimal TransactionSum = 0;
+            bool isValid = true;
+
+            Dictionary<string, int> userOperations = new Dictionary<string, int>();
+
+            for (int i = 1; i < Chain.Count; i++)
+            {
+                var currentBlock = Chain[i];
+                var previousBlock = Chain[i - 1];
+
+                if (currentBlock.Index == 0)
+                    continue;
+
+                if (currentBlock.Hash != _hashingService.ComputeBlockHash(currentBlock))
+                {
+                    Console.WriteLine($"Block {currentBlock.Index} Hash Error");
+                    isValid = false;
+                }
+
+                if (currentBlock.PreviousHash != previousBlock.Hash)
+                {
+                    Console.WriteLine($"Block {currentBlock.Index} PreviousHash Error");
+                    isValid = false;
+                }
+
+                if (!currentBlock.Hash.StartsWith(new string('0', currentBlock.DifficultyAtMining)))
+                {
+                    Console.WriteLine($"Block {currentBlock.Index} Proof of Work Error");
+                    isValid = false;
+                }
+
+                foreach (var item in currentBlock.Transaction)
+                {
+                    if (item == null)
+                        continue;
+
+                    TransactionCount++;
+                    TransactionSum += item.Amount;
+
+                    var isValidItem = _transactionService.ValidTransaction(item);
+
+                    if (!isValidItem.isValid)
+                    {
+                        Console.WriteLine(isValidItem.errorMessage);
+                        isValid = false;
+                    }
+
+                    int alreadyExists = Chain
+                        .SelectMany(b => b.Transaction)
+                        .Count(t => t != null && t.Id == item.Id);
+
+                    if (alreadyExists > 1)
+                    {
+                        Console.WriteLine($"Transaction ID {item.Id} already exists in Blockchain.");
+                        isValid = false;
+                    }
+
+                    string userId = item.From;
+
+                    if (!string.IsNullOrEmpty(userId))
+                    {
+                        if (userOperations.ContainsKey(userId))
+                            userOperations[userId]++;
+                        else
+                            userOperations[userId] = 1;
+                    }
+                }
+            }
+
+            var mostActiveUser = userOperations
+                .OrderByDescending(x => x.Value)
+                .FirstOrDefault();
+
+            Console.WriteLine($"Block Count: {BlockCount},");
+            Console.WriteLine($"Transaction Count: {TransactionCount},");
+            Console.WriteLine($"Transaction Sum: {TransactionSum}");
+            Console.WriteLine($"Most Active User: {mostActiveUser.Key ?? "None"}");
+            Console.WriteLine($"User Operations: {mostActiveUser.Value}");
+            Console.WriteLine($"IsValid: {isValid}");
+
+            return isValid;
+        }
+
     }
 }

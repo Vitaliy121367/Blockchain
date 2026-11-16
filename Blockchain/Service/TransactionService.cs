@@ -22,17 +22,17 @@ namespace Blockchain.Service
         {
             if (string.IsNullOrWhiteSpace(transaction.From))
             {
-                return (false, "Sender is required.");
+                return (false, $"Sender is required transaction {transaction.Id}");
             }
 
             if (string.IsNullOrWhiteSpace(transaction.To))
             {
-                return (false, "Recipient is required.");
+                return (false, $"Recipient is required transaction {transaction.Id}");
             }
 
             if (transaction.Amount <= 0)
             {
-                return (false, "Transaction amount must be greater than zero.");
+                return (false, $"Transaction amount must be greater than zero transaction {transaction.Id}");
             }       
 
             return (true, string.Empty);
