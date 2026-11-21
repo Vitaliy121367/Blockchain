@@ -16,7 +16,7 @@ namespace Blockchain.Service
             var address = GetAddress(publicKey);
             return new Wallet(name, address, publicKey, privateKey);
         }
-        private string GetAddress(byte[] publicKey)
+        public string GetAddress(byte[] publicKey)
         {
             byte[] hash = SHA256.Create().ComputeHash(publicKey);
             return Convert.ToHexString(hash).ToLower()[..10];

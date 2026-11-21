@@ -53,15 +53,6 @@ namespace Blockchain.Service
         public async Task AddBlock(List<Transaction> transactions, string author)
         {
             bool error = false;
-            foreach (var tx in transactions)
-            {
-                var isValid = _transactionService.ValidTransaction(tx);
-                if (!isValid.isValid)
-                {
-                    Console.WriteLine($"Error Message: {isValid.errorMessage}");
-                    error = true;
-                }
-            }
 
             var duplicateIds = transactions.Where(tx => tx != null).GroupBy(tx => tx.Id).Where(g => g.Count() > 1).Select(g => g.Key);
 

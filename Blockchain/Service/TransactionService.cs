@@ -8,15 +8,18 @@ namespace Blockchain.Service
     public class TransactionService
     {
         private readonly WalletService _walletService = new WalletService();
-        public Transaction CreateTransaction(string from, string to, decimal amount, Wallet wallet)
+        public Transaction? CreateTransaction(string from, string to, decimal amount, Wallet wallet)
         {
             var tx = new Transaction(from, to, amount, wallet.PublicKey);
             tx.Signature = wallet.Sign(tx.GetDataToSign());
+
             var valid = ValidTransaction(tx);
+
             if (!valid.isValid)
             {
                 Console.WriteLine(valid.errorMessage);
             }
+
             return tx;
         }
 
@@ -50,6 +53,10 @@ namespace Blockchain.Service
             if (!_walletService.VerifySignature(transaction.GetDataToSign(), transaction.Signature, transaction.PublicKey))
             {
                 return (false, $"Invalid Signature");
+            }
+            if (_walletService.GetAddress(transaction.PublicKey) != transaction.From)
+            {
+                return (false, "Public key does not belong to sender");
             }
 
             return (true, string.Empty);
