@@ -14,12 +14,16 @@ namespace Blockchain.Service
         public List<Block> Chain { get; set; }
         private readonly HashingService _hashingService;
         private readonly MiningService _miningService;
-        private readonly TransactionService _transactionService = new TransactionService();
+        private readonly TransactionService _transactionService;
+        private readonly WalletService _walletService;
+
         private BlockChain()
         {
             Chain = new List<Block>();
             _hashingService = new HashingService();
             _miningService = new MiningService();
+            _transactionService = new TransactionService();
+            _walletService = new WalletService();
         }
 
         public static async Task<BlockChain> CreateAsync()
@@ -77,6 +81,18 @@ namespace Blockchain.Service
                 if (alreadyExists)
                 {
                     Console.WriteLine($"Transaction ID {tx.Id} already exists in Blockchain.");
+                    error = true;
+                }
+                var isValid = _transactionService.ValidTransaction(tx);
+                var isValidSignature = _walletService.VerifySignature(tx.GetDataToSign(), tx.Signature, tx.PublicKey);
+                if (!isValid.isValid)
+                {
+                    Console.WriteLine($"Transaction ID {tx.Id} not valid");
+                    error = true;
+                }
+                if (!isValidSignature)
+                {
+                    Console.WriteLine($"Transaction ID {tx.Id} Valid Signature invalid: {tx.From} => {tx.To}");
                     error = true;
                 }
             }
