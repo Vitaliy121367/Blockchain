@@ -8,6 +8,7 @@ namespace Blockchain.Service
     public class TransactionService
     {
         private readonly WalletService _walletService = new WalletService();
+        private readonly BalanceService _balanceService = new BalanceService();
         public Transaction? CreateTransaction(string from, string to, decimal amount, Wallet wallet)
         {
             var tx = new Transaction(from, to, amount, wallet.PublicKey);
@@ -60,6 +61,24 @@ namespace Blockchain.Service
             }
 
             return (true, string.Empty);
+        }
+
+        public (bool isValid, string errorMessage) ValidBalance(Transaction transaction, List<Block> chain, List<Transaction> mempol)
+        {
+            if (transaction.isCoinBase)
+            {
+                return (true, string.Empty);
+            }
+            if (!_balanceService.HasSufficientBalance(transaction.From, transaction.Amount, chain, mempol))
+            {
+                return (false, "Insufficient balance for the transaction.");
+            }
+            var validationResult = ValidTransaction(transaction);
+            if (!validationResult.isValid)
+            {
+                return validationResult;
+            }
+            return (true, string.Empty);            
         }
     }
 }

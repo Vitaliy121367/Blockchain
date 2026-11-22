@@ -11,11 +11,13 @@ namespace Blockchain.Service
         private int _difficulty = 1;
         public readonly decimal _targetBlockTime = 10; // Target block time in seconds
         public readonly int _adjustEveryNBlocks = 3; // Number of blocks after which difficulty is adjusted
+        private readonly decimal _miningReward = 10;
         public List<Block> Chain { get; set; }
         private readonly HashingService _hashingService;
         private readonly MiningService _miningService;
         private readonly TransactionService _transactionService;
         private readonly WalletService _walletService;
+        private readonly BalanceService _balanceService;
 
         private BlockChain()
         {
@@ -50,7 +52,7 @@ namespace Blockchain.Service
             Chain.Add(genesisBlock);
         }
 
-        public async Task AddBlock(List<Transaction> transactions, string author)
+        public async Task AddBlock(List<Transaction> transactions, string author, string minerAddress, List<Transaction> mempol)
         {
             bool error = false;
 
@@ -75,15 +77,15 @@ namespace Blockchain.Service
                     error = true;
                 }
                 var isValid = _transactionService.ValidTransaction(tx);
-                var isValidSignature = _walletService.VerifySignature(tx.GetDataToSign(), tx.Signature, tx.PublicKey);
                 if (!isValid.isValid)
                 {
                     Console.WriteLine($"Transaction ID {tx.Id} not valid");
                     error = true;
                 }
-                if (!isValidSignature)
+                var balanceCheck = _transactionService.ValidBalance(tx, Chain, mempol.Where(t=>t.Id!=tx.Id).ToList());
+                if (!balanceCheck.isValid)
                 {
-                    Console.WriteLine($"Transaction ID {tx.Id} Valid Signature invalid: {tx.From} => {tx.To}");
+                    Console.WriteLine($"Invalid Transaction: {balanceCheck.errorMessage}");
                     error = true;
                 }
             }
@@ -94,7 +96,8 @@ namespace Blockchain.Service
             }
 
             var transactionCopy = new List<Transaction>(transactions);
-
+            var coinBaseTransaction = Transaction.CreateCoinBaseTransaction(minerAddress, GetCurrentReward());
+            transactionCopy.Insert(0, coinBaseTransaction);
             var lastBlock = Chain[Chain.Count - 1];
             var newBlock = new Block
             {
@@ -355,5 +358,20 @@ namespace Blockchain.Service
             return isValid;
         }
 
+        public decimal GetBalance(string address)
+        {
+            return _balanceService.GetBalance(address, Chain);
+        }
+        private decimal GetCurrentReward()
+        {
+            decimal reward = _miningReward;
+
+            for (int i = 0; i < Chain.Count / 5; i++)
+            {
+                reward /= 2;
+            }
+
+            return reward;
+        }
     }
 }

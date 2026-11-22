@@ -42,5 +42,18 @@ namespace Blockchain.Service
             Console.WriteLine($"MiningDuration: {block.MiningDuration}");
             Console.WriteLine(new string('-', 50));
         }
+        public void PrintTransactionHistory(BlockChain blockchain, Wallet wallet)
+        {
+            foreach (var block in blockchain.Chain)
+            {
+                foreach (var item in block.Transaction)
+                {
+                    if (item.From == wallet.Address || item.To == wallet.Address)
+                    {
+                        Console.WriteLine(item);
+                    }
+                }
+            }
+        }
     }
 }

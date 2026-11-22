@@ -13,6 +13,7 @@ namespace Blockchain
             var displayService = new DisplayService();
             var tempListTransaction = new List<Transaction>();
             var transactionService = new TransactionService();
+            var balanceService = new BalanceService();
 
             var walletService = new WalletService();
 
@@ -25,9 +26,10 @@ namespace Blockchain
                 Console.WriteLine("3. Display Chain");
                 Console.WriteLine("4. Display Transaction");
                 Console.WriteLine("5. Chain Valid");
-                Console.WriteLine("6. Add 20 Blocks");
+                Console.WriteLine("6. Add 10 Blocks");
                 Console.WriteLine("7. Create Wallet");
                 Console.WriteLine("8. Display Wallets");
+                Console.WriteLine("9. Print Transaction History");
                 Console.WriteLine("0. Exit");
 
                 var enter = Console.ReadLine();
@@ -35,7 +37,9 @@ namespace Blockchain
                 switch (enter)
                 {
                     case "1":
-                        await blockChainService.AddBlock(tempListTransaction, "author");
+                        Console.Write("Enter wallet id miner: ");
+                        int miner = Int32.Parse(Console.ReadLine());
+                        await blockChainService.AddBlock(tempListTransaction, "author", wallets[miner].Address, tempListTransaction);
                         tempListTransaction.Clear();
                         break;
 
@@ -67,9 +71,11 @@ namespace Blockchain
                         break;
 
                     case "6":
-                        for (int i = 0; i < 20; i++)
+                        Console.Write("Enter wallet id miner: ");
+                        int minerId = Int32.Parse(Console.ReadLine());
+                        for (int i = 0; i < 10; i++)
                         {
-                            await blockChainService.AddBlock(tempListTransaction, $"author {i + 1}");
+                            await blockChainService.AddBlock(tempListTransaction, $"author {i + 1}", wallets[minerId].Address, tempListTransaction);
                             tempListTransaction.Clear();
                         }
                         break;
@@ -85,8 +91,14 @@ namespace Blockchain
                     case "8":
                         for (int i = 0; i < wallets.Count; i++)
                         {
-                            Console.WriteLine($"Wallet id {i}, Name: {wallets[i].Name}, Address: {wallets[i].Address}");
+                            Console.WriteLine($"Wallet id {i}, Name: {wallets[i].Name}, Address: {wallets[i].Address}, Balance: {balanceService.GetBalance(wallets[i].Address, blockChainService.Chain)}");
                         }
+                        break;
+
+                    case "9":
+                        Console.Write("Enter wallet id: ");
+                        int idWallet = Int32.Parse(Console.ReadLine());
+                        displayService.PrintTransactionHistory(blockChainService, wallets[idWallet]);
                         break;
 
                     case "0":

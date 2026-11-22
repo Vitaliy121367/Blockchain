@@ -14,6 +14,7 @@ namespace Blockchain.Models
         public DateTime Timestamp { get; set; }
         public byte[] PublicKey { get; set; }
         public byte[] Signature { get; set; }
+        public bool isCoinBase { get; set; }
 
         public Transaction(string from, string to, decimal amount, byte[] publicKey)
         {
@@ -23,6 +24,14 @@ namespace Blockchain.Models
             Amount = amount;
             PublicKey = publicKey;
             Timestamp = DateTime.UtcNow;
+            isCoinBase = false;
+        }
+
+        public static Transaction CreateCoinBaseTransaction(string minerAddress, decimal amount)
+        {
+            var tx = new Transaction("COINBASE", minerAddress, amount, null);
+            tx.isCoinBase = true;
+            return tx;
         }
 
         public string ToRawString()
